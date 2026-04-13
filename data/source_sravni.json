@@ -1,0 +1,257 @@
+{
+  "source": "sravni.ru",
+  "date": "2026-04-13",
+  "parameters": {
+    "amount": 1000000,
+    "currency": "RUB",
+    "term_filter": "3 года"
+  },
+  "deposits": [
+    {
+      "bank": "СберБанк",
+      "product": "Лучший % (в конце срока)",
+      "rate_6m": 13.1,
+      "rate_1y": 10.5,
+      "rate_3y": 6.5,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "СберБанк",
+      "product": "Лучший % (ежемесячно)",
+      "rate_6m": 12.75,
+      "rate_1y": 10.0,
+      "rate_3y": 5.95,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "СберБанк",
+      "product": "СберВклад",
+      "rate_6m": 12.6,
+      "rate_1y": 10.0,
+      "rate_3y": 6.5,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн", "пополнение"]
+    },
+    {
+      "bank": "СберБанк",
+      "product": "СберВклад Молодёжный",
+      "rate_6m": 11.9,
+      "rate_1y": 9.3,
+      "rate_3y": 6.3,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "СберБанк",
+      "product": "Пенсионный плюс",
+      "rate_6m": null,
+      "rate_1y": null,
+      "rate_3y": 3.67,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["пенсионный"]
+    },
+    {
+      "bank": "ВТБ",
+      "product": "ВТБ Вклад",
+      "rate_6m": 13.1,
+      "rate_1y": 11.5,
+      "rate_3y": 11.5,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн", "пополнение", "снятие"]
+    },
+    {
+      "bank": "Газпромбанк",
+      "product": "Новые деньги",
+      "rate_6m": 13.8,
+      "rate_1y": 12.9,
+      "rate_3y": 8.3,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "Газпромбанк",
+      "product": "Копить",
+      "rate_6m": 13.2,
+      "rate_1y": 12.7,
+      "rate_3y": 8.3,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "Газпромбанк",
+      "product": "В Плюсе",
+      "rate_6m": 10.8,
+      "rate_1y": 9.9,
+      "rate_3y": 5.3,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн"]
+    },
+    {
+      "bank": "Альфа-Банк",
+      "product": "Альфа-Вклад новые деньги",
+      "rate_6m": 13.2,
+      "rate_1y": 13.1,
+      "rate_3y": 8.09,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн"]
+    },
+    {
+      "bank": "Альфа-Банк",
+      "product": "Альфа-Вклад Пенсионный",
+      "rate_6m": 13.2,
+      "rate_1y": 13.1,
+      "rate_3y": 7.4,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн", "пенсионный"]
+    },
+    {
+      "bank": "Альфа-Банк",
+      "product": "Альфа-Вклад Максимальный",
+      "rate_6m": 13.11,
+      "rate_1y": 13.0,
+      "rate_3y": 7.3,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн"]
+    },
+    {
+      "bank": "Альфа-Банк",
+      "product": "Альфа-Вклад",
+      "rate_6m": 12.8,
+      "rate_1y": 12.7,
+      "rate_3y": 7.0,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн", "пополнение"]
+    },
+    {
+      "bank": "Т-Банк",
+      "product": "СмартВклад",
+      "rate_6m": null,
+      "rate_1y": null,
+      "rate_3y": null,
+      "max_term_days": 570,
+      "max_term_rate": 12.23,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"],
+      "note": "Максимальный срок 19 месяцев (570 дней), вклад на 3 года недоступен"
+    },
+    {
+      "bank": "Россельхозбанк",
+      "product": "Свой вклад",
+      "rate_6m": 12.6,
+      "rate_1y": null,
+      "rate_3y": 8.2,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн", "пополнение", "снятие"]
+    },
+    {
+      "bank": "Россельхозбанк",
+      "product": "Доходный",
+      "rate_6m": 12.2,
+      "rate_1y": 10.7,
+      "rate_3y": 6.7,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн"]
+    },
+    {
+      "bank": "Россельхозбанк",
+      "product": "Доходный Пенсионный",
+      "rate_6m": 12.0,
+      "rate_1y": null,
+      "rate_3y": 7.6,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["отделение", "пенсионный"]
+    },
+    {
+      "bank": "Россельхозбанк",
+      "product": "Комфортный",
+      "rate_6m": 6.08,
+      "rate_1y": null,
+      "rate_3y": 4.81,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["капитализация", "онлайн", "пополнение", "снятие"]
+    },
+    {
+      "bank": "МКБ",
+      "product": "МКБ. Гранд",
+      "rate_6m": 14.6,
+      "rate_1y": 13.6,
+      "rate_3y": 12.1,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "МКБ",
+      "product": "МКБ. Перспектива",
+      "rate_6m": 14.7,
+      "rate_1y": 13.5,
+      "rate_3y": 12.0,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"],
+      "note": "При покупках по карте от 10 000 ₽"
+    },
+    {
+      "bank": "ДОМ.РФ",
+      "product": null,
+      "rate_6m": null,
+      "rate_1y": null,
+      "rate_3y": null,
+      "type": "вклад",
+      "rate_type": null,
+      "features": [],
+      "note": "Нет данных на sravni.ru"
+    },
+    {
+      "bank": "Совкомбанк",
+      "product": "Весенний доход",
+      "rate_6m": 13.0,
+      "rate_1y": 12.4,
+      "rate_3y": 12.0,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "Совкомбанк",
+      "product": "Регулярные %%",
+      "rate_6m": 12.4,
+      "rate_1y": 11.5,
+      "rate_3y": 9.0,
+      "type": "вклад",
+      "rate_type": "fixed",
+      "features": ["онлайн"]
+    },
+    {
+      "bank": "Райффайзенбанк",
+      "product": null,
+      "rate_6m": null,
+      "rate_1y": null,
+      "rate_3y": null,
+      "type": null,
+      "rate_type": null,
+      "features": [],
+      "note": "Банк не предлагает вклады с 2024 года"
+    }
+  ]
+}
