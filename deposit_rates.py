@@ -31,11 +31,11 @@ TOP10_BANKS = [
     "Райффайзенбанк",
 ]
 
-# Ключевая ставка ЦБ РФ на 13.04.2026
-CB_KEY_RATE = 21.0
+# Ключевая ставка ЦБ РФ на 14.04.2026
+CB_KEY_RATE = 15.0
 # Порог для «сомнительной» фиксированной ставки на 3 года
 SUSPICIOUS_FIXED_RATE_THRESHOLD = 15.0
-# Порог для «незначительного расхождения» (п.п.)
+# Порог для незначительного расхождения (п.п.)
 MINOR_DISCREPANCY_THRESHOLD = 0.5
 
 
@@ -49,10 +49,12 @@ class DepositRecord:
     base_rate: float | None = None
     conditions: str = ""
     note: str = ""
+    max_term_months: int | None = None
+    max_term_rate: float | None = None
 
 
 def load_source_data(filepath: Path) -> list[DepositRecord]:
-    """Загрузка JSON-файла источника и конвертация в список DepositRecord."""
+    """Загрузка JSON-файла источника и конвертация в список DepositRecord"""
     with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
 
@@ -68,17 +70,19 @@ def load_source_data(filepath: Path) -> list[DepositRecord]:
             base_rate=d.get("base_rate"),
             conditions=d.get("conditions", ""),
             note=d.get("note", ""),
+            max_term_months=d.get("max_term_months"),
+            max_term_rate=d.get("max_term_rate"),
         ))
     return records
 
 
 def filter_deposits_3y(records: list[DepositRecord]) -> list[DepositRecord]:
-    """Оставляет только записи-вклады со ставкой на 3 года (rate_3y != None)."""
+    """Оставляет только записи-вклады со ставкой на 3 года (rate_3y != None)"""
     return [r for r in records if r.rate_3y is not None and r.product is not None]
 
 
 def best_fixed_rate_per_bank(records: list[DepositRecord]) -> dict[str, DepositRecord]:
-    """Для каждого банка выбирает вклад с лучшей фиксированной ставкой на 3 года."""
+    """Для каждого банка выбирает вклад с лучшей фиксированной ставкой на 3 года"""
     best: dict[str, DepositRecord] = {}
     for r in records:
         if r.rate_type != "fixed":
@@ -89,7 +93,7 @@ def best_fixed_rate_per_bank(records: list[DepositRecord]) -> dict[str, DepositR
 
 
 def best_any_rate_per_bank(records: list[DepositRecord]) -> dict[str, DepositRecord]:
-    """Для каждого банка выбирает вклад с лучшей ставкой (любой тип) на 3 года."""
+    """Для каждого банка выбираем вклад с самой высокой ставкой на 3 года"""
     best: dict[str, DepositRecord] = {}
     for r in records:
         if r.bank not in best or (r.rate_3y or 0) > (best[r.bank].rate_3y or 0):
@@ -98,15 +102,14 @@ def best_any_rate_per_bank(records: list[DepositRecord]) -> dict[str, DepositRec
 
 
 def check_suspicious(rate: float | None, rate_type: str | None) -> str | None:
-    """Проверка на сомнительное значение ставки."""
     if rate is None:
         return None
     if rate_type == "fixed" and rate > SUSPICIOUS_FIXED_RATE_THRESHOLD:
-        return f"Сомнительное значение: фикс. ставка {rate}% > {SUSPICIOUS_FIXED_RATE_THRESHOLD}% на 3 года — возможно, плавающая"
+        return f"Подозрительное значение: фикс. ставка {rate}% > {SUSPICIOUS_FIXED_RATE_THRESHOLD}% на 3 года — возможно, плавающая"
     if rate > 25:
-        return f"Сомнительное значение: ставка {rate}% выглядит нереалистично высокой"
+        return f"Подозрительное значение: ставка {rate}% выглядит нереалистично высокой"
     if rate < 1:
-        return f"Сомнительное значение: ставка {rate}% подозрительно низкая"
+        return f"Подозрительное значение: ставка {rate}% подозрительно низкая"
     return None
 
 
@@ -116,10 +119,11 @@ class FinalRate:
     product: str | None
     rate: float | None
     rate_type: str | None
-    status: str                         # ok / minor / conflict / single / no_data / suspicious
+    status: str
     status_detail: str
     sources: dict[str, float | None] = field(default_factory=dict)
     floating_products: list[dict] = field(default_factory=list)
+    max_term_info: list[dict] = field(default_factory=list)
 
 
 def select_final_rate(
@@ -128,7 +132,7 @@ def select_final_rate(
     floating: dict[str, DepositRecord | None],
 ) -> FinalRate:
     """
-    Выбор итоговой ставки по банку из нескольких источников.
+    Выбор итоговой ставки по банку из нескольких источников
 
     Правила:
     1. Сравниваем только фиксированные ставки
@@ -171,7 +175,7 @@ def select_final_rate(
             floating_products=float_list,
         )
 
-    # Несколько источников — сравниваем
+    #Сравниваем несколько источников 
     vals = list(available.values())
     rate_values = [v.rate_3y for v in vals]
     max_diff = max(rate_values) - min(rate_values)
@@ -187,14 +191,21 @@ def select_final_rate(
         )
 
     if max_diff <= MINOR_DISCREPANCY_THRESHOLD:
-        avg = round(sum(rate_values) / len(rate_values), 2)
         src_str = ", ".join(f"{s}={r.rate_3y}%" for s, r in available.items())
-        rec = max(vals, key=lambda v: v.rate_3y or 0)
+        if "official" in available:
+            rec = available["official"]
+            detail = f"Незначительное расхождение ({max_diff:.2f} п.п.): {src_str}. Итог по офиц. сайту."
+            final_rate = rec.rate_3y
+        else:
+            avg = round(sum(rate_values) / len(rate_values), 2)
+            rec = max(vals, key=lambda v: v.rate_3y or 0)
+            detail = f"Незначительное расхождение ({max_diff:.2f} п.п.): {src_str}. Итог = среднее агрегаторов."
+            final_rate = avg
         return FinalRate(
-            bank=bank, product=rec.product, rate=avg,
+            bank=bank, product=rec.product, rate=final_rate,
             rate_type="fixed",
             status="minor",
-            status_detail=f"Незначительное расхождение ({max_diff:.2f} п.п.): {src_str}. Итог = среднее.",
+            status_detail=detail,
             sources={s: (r.rate_3y if r else None) for s, r in rates.items()},
             floating_products=float_list,
         )
@@ -252,6 +263,20 @@ def cross_validate_all(
                 float_per_src[src_name] = None
 
         final = select_final_rate(bank, fixed_per_src, float_per_src)
+
+        # Если 3-летних вкладов нет — собираем инфу про максимальный доступный срок
+        if final.status == "no_data":
+            for src_name, records in sources.items():
+                for r in records:
+                    if r.bank == bank and r.max_term_months and r.max_term_rate:
+                        final.max_term_info.append({
+                            "source": src_name,
+                            "product": r.product,
+                            "max_term_months": r.max_term_months,
+                            "rate": r.max_term_rate,
+                            "note": r.note,
+                        })
+
         results.append(final)
 
     return results
@@ -262,7 +287,7 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
     lines = []
     lines.append("# Отчёт: Ставки по вкладам ФЛ — топ-10 банков России")
     lines.append("")
-    lines.append(f"**Дата сбора данных:** 13.04.2026")
+    lines.append(f"**Дата сбора данных:** 14.04.2026")
     lines.append(f"**Параметры:** сумма 1 000 000 ₽, срок 3 года, рубли")
     lines.append("")
 
@@ -340,7 +365,7 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
             for fp in r.floating_products:
                 lines.append(f"| {r.bank} | {fp['product']} | {fp['rate']}% | {fp['source']} | {fp['note'][:80]} |")
         lines.append("")
-        lines.append(f"> **Примечание:** Ключевая ставка ЦБ РФ на 13.04.2026 = {CB_KEY_RATE}%. "
+        lines.append(f"> **Примечание:** Ключевая ставка ЦБ РФ на 14.04.2026 = {CB_KEY_RATE}%. "
                      f"Плавающие ставки будут снижаться при снижении ключевой ставки.")
         lines.append("")
 
@@ -351,7 +376,7 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
     lines.append("")
     lines.append("1. Сравниваются только **фиксированные** ставки (плавающие выделены отдельно)")
     lines.append("2. Все источники совпадают → ставка итоговая")
-    lines.append(f"3. Расхождение ≤ {MINOR_DISCREPANCY_THRESHOLD} п.п. → среднее арифметическое")
+    lines.append(f"3. Расхождение ≤ {MINOR_DISCREPANCY_THRESHOLD} п.п. → если есть офиц. сайт, берём его; иначе среднее арифметическое по агрегаторам")
     lines.append(f"4. Расхождение > {MINOR_DISCREPANCY_THRESHOLD} п.п. → «противоречие», приоритет: офиц. сайт > banki.ru > sravni.ru")
     lines.append("5. Данные из одного источника → принимаются как есть")
     lines.append(f"6. Фикс. ставка > {SUSPICIOUS_FIXED_RATE_THRESHOLD}% на 3 года → проверка (возможно плавающая)")
@@ -384,6 +409,20 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
             if r.floating_products:
                 for fp in r.floating_products:
                     lines.append(f"- Плавающий продукт: {fp['product']} ({fp['rate']}%) — {fp['note'][:100]}")
+            if r.max_term_info:
+                lines.append("- Ставка по **максимально доступному сроку** по источникам:")
+                for mt in r.max_term_info:
+                    lines.append(
+                        f"    - {mt['source']}: {mt['product']} — {mt['max_term_months']} мес, "
+                        f"ставка {mt['rate']}%"
+                    )
+                rates_mt = [mt["rate"] for mt in r.max_term_info]
+                if len(rates_mt) > 1:
+                    spread = max(rates_mt) - min(rates_mt)
+                    lines.append(
+                        f"- Расхождение между источниками по макс. сроку: {spread:.2f} п.п. "
+                        f"(от {min(rates_mt)}% до {max(rates_mt)}%)."
+                    )
             lines.append("")
 
     # --- 4. Использование LLM ---
@@ -415,7 +454,7 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
     lines.append("  отображались как обычные вклады.")
     lines.append("- **Причины расхождений:** LLM объяснил разницу в ставках Газпромбанка ")
     lines.append("  (5.3% vs 8.3%) наличием бонуса за опцию «Накопления» на banki.ru.")
-    lines.append("- **Проверка разумности:** Сравнение ставок с ключевой ставкой ЦБ (21%) — ")
+    lines.append(f"- **Проверка разумности:** Сравнение ставок с ключевой ставкой ЦБ ({CB_KEY_RATE}%) — ")
     lines.append("  фиксированные ставки 6-12% на 3 года адекватны при ожидании снижения КС.")
     lines.append("")
 
@@ -453,12 +492,13 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
         lines.append("")
         lines.append("1. **sravni.ru** показал «Свой вклад» со ставкой 8.2% на 3 года.")
         lines.append("2. **banki.ru** показал тот же продукт «Свой вклад» со ставкой 7.8%.")
-        lines.append("3. Расхождение = 0.4 п.п. (≤ 0.5 п.п.) → классифицировано как ")
-        lines.append("   «незначительное расхождение».")
-        lines.append("4. **Причина расхождения:** sravni.ru показывает ставку с учётом пополнения ")
-        lines.append("   (есть капитализация), banki.ru — базовую ставку для новых вкладчиков ")
-        lines.append("   при оформлении в офисе.")
-        lines.append("5. **Решение:** Итоговая ставка = среднее арифметическое = 8.0%.")
+        lines.append("3. **Офиц. сайт (rshb.ru)** показал «Свой вклад» со ставкой 8.2% ")
+        lines.append("   (калькулятор: 1 млн ₽, 36 мес, без пополнения/снятия, «Новый сберегатель»).")
+        lines.append("4. Расхождение = 0.4 п.п. (≤ 0.5 п.п.) → «незначительное расхождение».")
+        lines.append("5. **Причина расхождения:** banki.ru, вероятно, отображает устаревшую ставку ")
+        lines.append("   или ставку без опции «Новый сберегатель».")
+        lines.append("6. **Решение:** Итоговая ставка = ставка с офиц. сайта = 8.2% ")
+        lines.append("   (офиц. сайт приоритетнее агрегаторов как первоисточник).")
         lines.append("")
 
     # Кейс 3: Газпромбанк
@@ -518,7 +558,7 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
     lines.append("| Россельхозбанк | «до 13,4%» | **8,0%** | «Ультра Доходный» требует от 1,5 млн руб. |")
     lines.append("| МКБ | «13,7%» | **12,05%** | «Простая выгода» нет на 3 года |")
     lines.append("| Совкомбанк | «до 14,5%» | **12,0%** | С «Халвой», вероятно короткий срок |")
-    lines.append("| Т-Банк | макс. 24 мес | макс. **19 мес** | Даже срок завышен |")
+    lines.append("| Т-Банк | макс. 24 мес | макс. **24 мес** | Срок указан корректно (единственный случай) |")
     lines.append("")
     lines.append("**Диагноз:** Алиса не фильтрует ставки по конкретному сроку. Формулировка «до X%» берётся")
     lines.append("из рекламных заголовков банков, где всегда указан максимум по короткому сроку.")
@@ -545,7 +585,7 @@ def generate_report(results: list[FinalRate], sources_meta: dict) -> str:
     lines.append("   существенно ниже 6-месячных (12-15%).")
     lines.append("2. **Плавающие вклады** (Сбербанк «Ключевой», Альфа «Ключевой») дают высокие ")
     lines.append("   текущие ставки (15-16%), но несут риск снижения при смягчении ДКП.")
-    lines.append("3. **Два банка не предлагают 3-летних вкладов**: Т-Банк (макс. 19 мес) и ")
+    lines.append("3. **Два банка не предлагают 3-летних вкладов**: Т-Банк (макс. 24 мес) и ")
     lines.append("   Райффайзенбанк (вклады закрыты с 2024 г.).")
     lines.append("4. **Расхождения между агрегаторами** вызваны: разным учётом бонусных опций, ")
     lines.append("   различием продуктовых каталогов, условиями «для новых клиентов».")
