@@ -25,6 +25,8 @@
 ```bash
 pip install -r requirements.txt
 
+mkdir -p data/raw
+
 # 1) Один раз — качаем данные с ЦБ (нужен интернет + утилита bsdtar для .rar)
 python download_data.py
 
@@ -39,7 +41,7 @@ python process_form_101.py
 - Python 3.10+.
 - Утилита `bsdtar` (часть libarchive). На macOS доступна из коробки в `/opt/anaconda3/bin/`
   или ставится через `brew install libarchive`. На Ubuntu: `sudo apt install libarchive-tools`.
-  На Windows запускайте скрипт под **WSL** (Ubuntu) — там `bsdtar` ставится той же
+  На Windows запускайте скрипт под **WSL** (Ubuntu), там `bsdtar` ставится той же
   командой `sudo apt install libarchive-tools`.
 - Из Python-пакетов — см. `requirements.txt`:
   - `dbfread` — чтение DBF (чистый Python, cp866/cp1251),
@@ -107,7 +109,8 @@ third_task/
 │       └── 12021_P1.DBF          # форма 102, Q1 2021
 ├── download_data.py              # одноразовая загрузка
 ├── process_form_101.py           # основной скрипт: DBF → Excel
-├── bank_profit_report.xlsx       # результат (data + validation + ручной dashboard)
+├── bank_profit_report_final_with_dashboard.xlsx       # результат (data + validation + ручной dashboard)
+├── bank_profit_report.xlsx # результат без дашборда (получается автоматически при python process_form_101.py)
 ├── requirements.txt
 └── README.md              
 ```
