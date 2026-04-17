@@ -39,6 +39,8 @@ python process_form_101.py
 - Python 3.10+.
 - Утилита `bsdtar` (часть libarchive). На macOS доступна из коробки в `/opt/anaconda3/bin/`
   или ставится через `brew install libarchive`. На Ubuntu: `sudo apt install libarchive-tools`.
+  На Windows запускайте скрипт под **WSL** (Ubuntu) — там `bsdtar` ставится той же
+  командой `sudo apt install libarchive-tools`.
 - Из Python-пакетов — см. `requirements.txt`:
   - `dbfread` — чтение DBF (чистый Python, cp866/cp1251),
   - `openpyxl` — запись .xlsx вместе с формулами, data-validation и диаграммами,
