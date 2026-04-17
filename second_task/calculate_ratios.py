@@ -151,7 +151,7 @@ def compute_loan_yield_3m(df):
     """
     LoanYield_3m(t) = 4 × NII(t) / loans_avg_Q(t),  t ∈ {Jan, Apr, Jul, Oct}
     NII используется как квартальный flow — обосновано в report.md
-    (ТЗ говорит YTD, но данные монотонно не растут внутри года).
+    (ТЗ говорит YTD, но данные монотонно не растут внутри года)
     """
     g = df.groupby('regn', group_keys=False)
     df['loans_avg_Q'] = g['Loans_Total_Net'].apply(lambda s: s.rolling(4, min_periods=4).mean())
