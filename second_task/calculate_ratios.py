@@ -8,6 +8,8 @@
     ... отражается накопленным итогом»; квартальный скоуп ⇒ накопление за квартал
   - Equity < 0 в любой точке 13-месячного окна → ROE не считается
   - Loans_Gross = Loans_Total_Net − Loans_LLP (LLP обычно отрицательный)
+  - profit_month(t) — поток прибыли за месяц, заканчивающийся датой t
+    (Σ profit_month(1 фев Y … 1 янв Y+1) = FY(Y), см. restore_monthly_profit_from_ytd)
 
 Запуск:
   python calculate_ratios.py -i /path/to/bank_data.xlsx
@@ -86,7 +88,10 @@ def add_error_flags(df):
     df['flag_loans_negative']    = df['Loans_Total_Net'] < 0
     df['flag_deposits_negative'] = df['Client_Deposits'] < 0
     df['flag_assets_negative']   = df['Assets'] < 0
-    df['flag_llp_exceeds_net']   = df['Loans_LLP'].abs() > df['Loans_Total_Net'].abs()
+    # LLP в норме отрицателен, Net ≥ 0. Флаг сработает только на валидных
+    # по знаку рядах: резерв по модулю больше портфеля. Строки с Net < 0
+    # ловятся отдельным flag_loans_negative — не смешиваем две разные аномалии.
+    df['flag_llp_exceeds_net']   = (df['Loans_Total_Net'] >= 0) & ((-df['Loans_LLP']) > df['Loans_Total_Net'])
     df['flag_llp_positive_sign'] = df['Loans_LLP'] > 0
     return df
 
@@ -96,24 +101,29 @@ def add_error_flags(df):
 def restore_monthly_profit_from_ytd(df):
     """
     Восстанавливает месячный поток прибыли из YTD NIC.
-      profit_month(t) = NIC(t)                если month(t) == 2   (январский flow)
-                      = NIC(t) − NIC(t−1мес)  иначе                (включая t=1 янв)
-    Предполагает, что NIC(1 янв Y) = FY(Y−1) и YTD для Y стартует с 0 в феврале.
+
+    Конвенция: profit_month(t) — это прибыль за календарный месяц,
+    заканчивающийся датой t (даты в данных — 1-е число месяца):
+      • t = 1 фев Y   → flow января Y = NIC(1 фев Y)
+      • t = 1 мар Y   → flow февраля Y = NIC(1 мар Y) − NIC(1 фев Y)
+      • …
+      • t = 1 янв Y+1 → flow декабря Y = NIC(1 янв Y+1) − NIC(1 дек Y)
+                         (NIC(1 янв Y+1) = FY(Y), NIC(1 дек Y) = YTD на 1 дек)
+
+    Следствие конвенции: Σ profit_month(1 фев Y … 1 янв Y+1) = FY(Y).
     Если в ряду пропуск (предыдущая точка не на t−1мес) → flow=NaN.
     """
     df = df.sort_values(['regn', 'date']).reset_index(drop=True)
-    df['profit_month'] = np.nan
-    for _, idx in df.groupby('regn').indices.items():
-        g = df.loc[idx]
-        nic = g['Net_Income_Current'].values
-        dates = pd.to_datetime(g['date']).values
-        flows = np.full(len(g), np.nan)
-        for i in range(1, len(g)):
-            d, prev = pd.Timestamp(dates[i]), pd.Timestamp(dates[i - 1])
-            if prev != d - pd.DateOffset(months=1):
-                continue
-            flows[i] = nic[i] if d.month == 2 else nic[i] - nic[i - 1]
-        df.loc[idx, 'profit_month'] = flows
+    g = df.groupby('regn', group_keys=False, sort=False)
+    prev_date = g['date'].shift(1)
+    prev_nic  = g['Net_Income_Current'].shift(1)
+    expected_prev = df['date'] - pd.DateOffset(months=1)
+    gap_ok = prev_date == expected_prev
+    is_feb = df['date'].dt.month == 2
+    flow = np.where(is_feb,
+                    df['Net_Income_Current'],
+                    df['Net_Income_Current'] - prev_nic)
+    df['profit_month'] = np.where(gap_ok, flow, np.nan)
     return df
 
 
@@ -125,10 +135,13 @@ def compute_roe_12m(df):
         ROE_12m(t) = Σ profit_month(t−11..t) / mean(Equity(t−12..t))
     Условия: 13 заполненных точек в окне, Equity(s) ≥ 0 для всех s в окне.
 
-    Control-версия (для сверки с «наивным» расчётом):
-        ROE_12m_flow_check(t) = rolling_sum(NIC, 12) / equity_avg_13
-    Ожидается, что она завышена в ~6.5× при истинной YTD-семантике NIC —
-    использовать только как диагностический индикатор.
+    Диагностическая колонка ROE_12m_naive_sum:
+        ROE_12m_naive_sum(t) = rolling_sum(NIC, 12) / equity_avg_13
+    Это не «flow-гипотеза ROE», а именно наивная сумма 12 YTD-значений,
+    делённая на средний капитал. Нужна как индикатор YTD/flow-семантики
+    NIC: под истинной YTD (наш случай) отношение к ROE_12m систематически
+    ≈ 6.5× при ~равных потоках и 7–10× при росте; если NIC окажется
+    flow — колонки совпадут. См. diag-строку в print_summary.
     """
     g = df.groupby('regn', group_keys=False)
     df['profit_12m']    = g['profit_month'].apply(lambda s: s.rolling(12, min_periods=12).sum())
@@ -143,9 +156,9 @@ def compute_roe_12m(df):
             & (df['Equity'] >= 0))
     df['ROE_12m'] = np.where(mask, df['profit_12m'] / df['equity_avg_13'], np.nan)
 
-    # control: наивная flow-интерпретация NIC (для диагностики)
+    # диагностика: наивная сумма 12 YTD-значений NIC (см. докстринг)
     nic_sum_12 = g['Net_Income_Current'].apply(lambda s: s.rolling(12, min_periods=12).sum())
-    df['ROE_12m_flow_check'] = np.where(mask, nic_sum_12 / df['equity_avg_13'], np.nan)
+    df['ROE_12m_naive_sum'] = np.where(mask, nic_sum_12 / df['equity_avg_13'], np.nan)
     return df
 
 
@@ -192,6 +205,9 @@ def add_outlier_flags(df):
                                 | (df['LoanYield_3m'] > YIELD_OUTLIER_RANGE[1]))
     df['flag_ldr_outlier']   = ((df['LDR'] < LDR_OUTLIER_RANGE[0])
                                 | (df['LDR'] > LDR_OUTLIER_RANGE[1]))
+    # LDR посчитан, но |LLP| > Net — значение формально валидно (Gross > 0),
+    # но завышено, см. §3.1 отчёта. Помечаем, не удаляем — решение за аналитиком.
+    df['flag_ldr_suspect']   = df['LDR'].notna() & df['flag_llp_exceeds_net']
     return df
 
 
@@ -228,12 +244,12 @@ def print_summary(df):
               f'mean={s.mean()*scale:7.2f}{suffix}  '
               f'max={s.max()*scale:8.2f}{suffix}')
 
-    # диагностический control — покажет, если YTD/flow гипотеза расходятся
+    # диагностический индикатор YTD/flow-семантики NIC
     roe_ytd = df['ROE_12m'].dropna()
-    roe_flow = df['ROE_12m_flow_check'].dropna()
-    if len(roe_ytd) and len(roe_flow):
-        ratio = roe_flow.median() / roe_ytd.median() if roe_ytd.median() else np.nan
-        print(f'\n  diag: ROE_12m_flow_check/ROE_12m (median ratio) = {ratio:.2f} '
+    roe_naive = df['ROE_12m_naive_sum'].dropna()
+    if len(roe_ytd) and len(roe_naive):
+        ratio = roe_naive.median() / roe_ytd.median() if roe_ytd.median() else np.nan
+        print(f'\n  diag: ROE_12m_naive_sum/ROE_12m (median ratio) = {ratio:.2f} '
               f'(ожидается ≈ 6–7 при YTD-семантике NIC)')
 
     print('\nФлаги (число строк):')

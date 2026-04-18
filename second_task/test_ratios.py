@@ -70,6 +70,39 @@ def test_parse_value():
     print('  OK  parse_value: 11 кейсов')
 
 
+# ---------- конвенция profit_month ----------
+
+def test_profit_month_sum_equals_fy():
+    """
+    Σ profit_month(1 фев Y … 1 янв Y+1) = FY(Y).
+
+    Проверяет конвенцию: profit_month(t) — поток календарного месяца,
+    заканчивающегося датой t. Следствие — сумма за 12 "сдвинутых" дат
+    равна годовой прибыли FY(Y). Также сверяем два граничных значения:
+    profit_month(1 фев) = январь, profit_month(1 янв) = декабрь пред. года.
+    """
+    # FY(2023) = 5000; 2024 YTD: 200, 500, 900, 1400, 2000, 2700,
+    # 3500, 4400, 5400, 6500, 7700; FY(2024) = 9000
+    dates = pd.date_range('2024-01-01', '2025-01-01', freq='MS')
+    nic = [5000, 200, 500, 900, 1400, 2000, 2700, 3500, 4400,
+           5400, 6500, 7700, 9000]
+    rows = [{'regn': 'W', 'date': d, 'Net_Income_Current': n,
+             'Equity': 1000, 'Loans_Total_Net': 1000, 'Loans_LLP': -100,
+             'Client_Deposits': 2000}
+            for d, n in zip(dates, nic)]
+    df = _build_df(rows)
+    df = restore_monthly_profit_from_ytd(df)
+    by_date = df.set_index('date')
+
+    s = by_date.loc['2024-02-01':'2025-01-01', 'profit_month'].sum()
+    assert abs(s - 9000) < 1e-9, f'Σ profit_month = {s}, ожидалось 9000 (FY 2024)'
+    # profit_month(1 янв 2025) = 9000 − 7700 = 1300 (декабрь 2024)
+    assert abs(by_date.loc['2025-01-01', 'profit_month'] - 1300) < 1e-9
+    # profit_month(1 фев 2024) = 200 (январь 2024)
+    assert abs(by_date.loc['2024-02-01', 'profit_month'] - 200) < 1e-9
+    print('  OK  test_profit_month_sum: sum=FY, 1 янв -> декабрь, 1 фев -> январь')
+
+
 # ---------- кейс 1: Equity меняет знак в окне ROE 12m ----------
 
 def test_case_1_equity_sign_change():
@@ -160,6 +193,7 @@ def test_case_3_missing_quarter():
 def main():
     tests = [
         test_parse_value,
+        test_profit_month_sum_equals_fy,
         test_case_1_equity_sign_change,
         test_case_2_llp_exceeds_net,
         test_case_3_missing_quarter,
