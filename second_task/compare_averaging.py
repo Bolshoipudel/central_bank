@@ -1,7 +1,7 @@
 """
 Сравнение трёх методов усреднения Equity для ROE 12m
 
-Воспроизводит таблицу в report.md §3.2 пункт 4:
+Воспроизводит таблицу в README.md §3.2 пункт 4:
   - 13 точек (принято в calculate_ratios.py): mean(Equity(t−12..t))
   - 12 точек:                                 mean(Equity(t−11..t))
   - 2 точки (begin+end)/2:                    (Equity(t−12) + Equity(t)) / 2
