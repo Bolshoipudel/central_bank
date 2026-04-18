@@ -1,5 +1,5 @@
 """
-Сравнение трёх методов усреднения Equity для ROE 12m.
+Сравнение трёх методов усреднения Equity для ROE 12m
 
 Воспроизводит таблицу в report.md §3.2 пункт 4:
   - 13 точек (принято в calculate_ratios.py): mean(Equity(t−12..t))
@@ -20,7 +20,7 @@ from calculate_ratios import load_and_normalize, restore_monthly_profit_from_ytd
 
 
 def compute_comparison(df):
-    """Возвращает DataFrame с валидными строками и тремя версиями ROE."""
+    """Возвращает DataFrame с валидными строками и тремя версиями ROE"""
     df = restore_monthly_profit_from_ytd(df)
     g = df.groupby('regn', group_keys=False)
 
