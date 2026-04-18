@@ -83,9 +83,12 @@ LDR(t) = Loans_Gross(t) / Client_Deposits(t)
 
 ### Код расчёта
 
-Полный код: `second_task/eda.ipynb` (интерактивная отладка с промежуточными шагами).
+- `second_task/calculate_ratios.py` — производственный пайплайн. Запуск: `python calculate_ratios.py -i /path/to/bank_data.xlsx`. По умолчанию печатает сводку в stdout и сохраняет полный DataFrame в `./ratios.csv` (все исходные поля + коэффициенты + промежуточные окна + флаги). Флаг `-o` подменяет путь.
+- `second_task/compare_averaging.py` — отдельный скрипт сравнения трёх методов усреднения Equity (см. §3.2.4). Запуск: `python compare_averaging.py -i /path/to/bank_data.xlsx`. Печатает сводку в stdout и сохраняет построчное сравнение в `./averaging_comparison.csv`.
+- `second_task/test_ratios.py` — исполняемые тесты для `test_cases.md` (3 краевых сценария + регрессия `parse_value`). Запуск: `python test_ratios.py`.
+- `second_task/eda.ipynb` — интерактивная отладка с промежуточными шагами (для воспроизведения результатов достаточно `calculate_ratios.py`).
 
-Основные этапы:
+Основные этапы в `calculate_ratios.py`:
 1. Нормализация данных: парсинг текстовых значений с единицами (млн/тыс/млрд руб.), приведение к float
 2. Флаги ошибок данных (Equity < 0, Loans < 0, Client_Deposits < 0, |LLP| > Net)
 3. Восстановление месячных потоков прибыли из YTD
