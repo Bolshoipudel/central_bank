@@ -1,0 +1,180 @@
+[
+  {
+    "bank": "СберБанк",
+    "product": "Лучший % (в конце срока)",
+    "rate": 6.5,
+    "rate_type": "fixed",
+    "status": "ok",
+    "status_detail": "Все источники совпадают",
+    "sources": {
+      "sravni.ru": 6.5,
+      "banki.ru": null,
+      "official": 6.5
+    },
+    "floating_products": [
+      {
+        "source": "banki.ru",
+        "product": "Ключевой",
+        "rate": 15.8,
+        "note": "Плавающая ставка. На sravni.ru этот продукт отсутствует."
+      }
+    ],
+    "max_term_info": []
+  },
+  {
+    "bank": "ВТБ",
+    "product": "ВТБ Вклад",
+    "rate": 11.5,
+    "rate_type": "fixed",
+    "status": "ok",
+    "status_detail": "Все источники совпадают",
+    "sources": {
+      "sravni.ru": 11.5,
+      "banki.ru": 11.5,
+      "official": 11.5
+    },
+    "floating_products": [],
+    "max_term_info": []
+  },
+  {
+    "bank": "Газпромбанк",
+    "product": "Новые деньги",
+    "rate": 8.3,
+    "rate_type": "fixed",
+    "status": "ok",
+    "status_detail": "Все источники совпадают",
+    "sources": {
+      "sravni.ru": 8.3,
+      "banki.ru": 8.3,
+      "official": 8.3
+    },
+    "floating_products": [],
+    "max_term_info": []
+  },
+  {
+    "bank": "Альфа-Банк",
+    "product": "Альфа-Вклад",
+    "rate": 7.3,
+    "rate_type": "fixed",
+    "status": "conflict",
+    "status_detail": "Противоречие (0.79 п.п.): sravni.ru=8.09%, official=7.3%. Выбран official (приоритет).",
+    "sources": {
+      "sravni.ru": 8.09,
+      "banki.ru": null,
+      "official": 7.3
+    },
+    "floating_products": [
+      {
+        "source": "banki.ru",
+        "product": "Альфа-Вклад Ключевой",
+        "rate": 16.53,
+        "note": "Плавающая ставка. На sravni.ru этот продукт отсутствует."
+      }
+    ],
+    "max_term_info": []
+  },
+  {
+    "bank": "Т-Банк",
+    "product": null,
+    "rate": null,
+    "rate_type": null,
+    "status": "no_data",
+    "status_detail": "Нет данных о вкладах на 3 года",
+    "sources": {},
+    "floating_products": [],
+    "max_term_info": [
+      {
+        "source": "sravni.ru",
+        "product": "СмартВклад",
+        "max_term_months": 24,
+        "rate": 12.23,
+        "note": "Максимальный срок 24 месяца (720 дней), ставка 12.23% для нового клиента. Вклад на 3 года недоступен."
+      },
+      {
+        "source": "banki.ru",
+        "product": "СмартВклад (стандартная ставка)",
+        "max_term_months": 23,
+        "rate": 7.49,
+        "note": "Максимальный срок 699 дней (≈23 мес). Базовая ставка 7%, с капитализацией 7.49%. Вклад на 3 года недоступен. Ставка значительно ниже, чем на sravni.ru и офиц. сайте (вероятно, устаревшие данные или другой вариант продукта)."
+      },
+      {
+        "source": "official",
+        "product": "СмартВклад",
+        "max_term_months": 24,
+        "rate": 11.0,
+        "note": "Источник: tbank.ru, калькулятор вклада. Скриншот от 14.04.2026. Вклад на 3 года у Т-Банка недоступен."
+      }
+    ]
+  },
+  {
+    "bank": "Россельхозбанк",
+    "product": "Свой вклад",
+    "rate": 8.2,
+    "rate_type": "fixed",
+    "status": "minor",
+    "status_detail": "Незначительное расхождение (0.40 п.п.): sravni.ru=8.2%, banki.ru=7.8%, official=8.2%. Итог по офиц. сайту.",
+    "sources": {
+      "sravni.ru": 8.2,
+      "banki.ru": 7.8,
+      "official": 8.2
+    },
+    "floating_products": [],
+    "max_term_info": []
+  },
+  {
+    "bank": "МКБ",
+    "product": "МКБ. Перспектива",
+    "rate": 12.0,
+    "rate_type": "fixed",
+    "status": "minor",
+    "status_detail": "Незначительное расхождение (0.10 п.п.): sravni.ru=12.1%, banki.ru=12.0%, official=12.0%. Итог по офиц. сайту.",
+    "sources": {
+      "sravni.ru": 12.1,
+      "banki.ru": 12.0,
+      "official": 12.0
+    },
+    "floating_products": [],
+    "max_term_info": []
+  },
+  {
+    "bank": "ДОМ.РФ",
+    "product": "Вклад",
+    "rate": 11.2,
+    "rate_type": "fixed",
+    "status": "ok",
+    "status_detail": "Все источники совпадают",
+    "sources": {
+      "sravni.ru": null,
+      "banki.ru": 11.2,
+      "official": 11.2
+    },
+    "floating_products": [],
+    "max_term_info": []
+  },
+  {
+    "bank": "Совкомбанк",
+    "product": "Весенний доход",
+    "rate": 12.0,
+    "rate_type": "fixed",
+    "status": "ok",
+    "status_detail": "Все источники совпадают",
+    "sources": {
+      "sravni.ru": 12.0,
+      "banki.ru": 12.0,
+      "official": 12.0
+    },
+    "floating_products": [],
+    "max_term_info": []
+  },
+  {
+    "bank": "Райффайзенбанк",
+    "product": null,
+    "rate": null,
+    "rate_type": null,
+    "status": "no_data",
+    "status_detail": "Нет данных о вкладах на 3 года",
+    "sources": {},
+    "floating_products": [],
+    "max_term_info": []
+  }
+]
