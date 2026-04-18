@@ -217,7 +217,7 @@ def select_final_rate(
 def cross_validate_all(
     sources: dict[str, list[DepositRecord]],
 ) -> list[FinalRate]:
-    """Перекрёстная проверка всех источников по каждому банку."""
+    """Перекрёстная проверка всех источников по каждому банку"""
     results = []
 
     for bank in TOP10_BANKS:
@@ -287,16 +287,13 @@ def main():
         print("Ошибка: не найден ни один файл данных в data/")
         return
 
-    # Перекрёстная проверка
     results = cross_validate_all(sources)
 
-    # Вывод сводки в консоль
     print("\n=== ИТОГОВЫЕ СТАВКИ (фиксированные, 3 года, 1 млн ₽) ===\n")
     for i, r in enumerate(results, 1):
         rate_str = f"{r.rate}%" if r.rate else "—"
         print(f"{i:2d}. {r.bank:<20s} | {rate_str:>8s} | {r.status:<10s} | {r.product or '—'}")
 
-    # Запись структурированного результата для ручного переноса в report.md
     with open(RESULTS_PATH, "w", encoding="utf-8") as f:
         json.dump([asdict(r) for r in results], f, ensure_ascii=False, indent=2)
 
