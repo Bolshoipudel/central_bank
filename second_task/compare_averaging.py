@@ -84,20 +84,19 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('-i', '--input', required=True, type=Path, help='Путь к bank_data.xlsx')
-    ap.add_argument('-o', '--output', type=Path, default=None,
-                    help='CSV с построчным сравнением (опционально)')
+    ap.add_argument('-o', '--output', type=Path, default=Path('averaging_comparison.csv'),
+                    help='CSV с построчным сравнением (по умолчанию ./averaging_comparison.csv)')
     args = ap.parse_args()
 
     df = load_and_normalize(args.input)
     d = compute_comparison(df)
     print_report(d)
 
-    if args.output:
-        cols = ['regn', 'date', 'Equity', 'profit_12m',
-                'eq_2pt', 'eq_12pt', 'eq_13pt',
-                'ROE_2pt', 'ROE_12pt', 'ROE_13pt']
-        d[cols].to_csv(args.output, index=False)
-        print(f'\nСохранено: {args.output}')
+    cols = ['regn', 'date', 'Equity', 'profit_12m',
+            'eq_2pt', 'eq_12pt', 'eq_13pt',
+            'ROE_2pt', 'ROE_12pt', 'ROE_13pt']
+    d[cols].to_csv(args.output, index=False)
+    print(f'\nСохранено: {args.output}')
 
 
 if __name__ == '__main__':

@@ -243,16 +243,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('-i', '--input', required=True, type=Path, help='Путь к bank_data.xlsx')
-    ap.add_argument('-o', '--output', type=Path, default=None,
-                    help='Путь для CSV с полными результатами (опционально)')
+    ap.add_argument('-o', '--output', type=Path, default=Path('ratios.csv'),
+                    help='Путь для CSV с полными результатами (по умолчанию ./ratios.csv)')
     args = ap.parse_args()
 
     df = compute_all(args.input)
     print_summary(df)
 
-    if args.output:
-        df.to_csv(args.output, index=False)
-        print(f'\nСохранено: {args.output}')
+    df.to_csv(args.output, index=False)
+    print(f'\nСохранено: {args.output}')
 
 
 if __name__ == '__main__':
