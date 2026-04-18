@@ -7,7 +7,7 @@
   - Equity < 0 в любой точке 13-месячного окна → ROE не считается
   - Loans_Gross = Loans_Total_Net − Loans_LLP (LLP обычно отрицательный)
 
-Использование:
+Запуск:
   python calculate_ratios.py -i /path/to/bank_data.xlsx
   python calculate_ratios.py -i /path/to/bank_data.xlsx -o results.csv
 """
